@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Patient - Patient Tracking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            background: linear-gradient(135deg, #fd7e14 0%, #e0a800 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .nav-link {
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .content-header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .form-section {
+            border-left: 4px solid #fd7e14;
+            padding-left: 20px;
+            margin-bottom: 30px;
+        }
+        .form-section h5 {
+            color: #fd7e14;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 sidebar p-3">
+                <div class="text-center mb-4">
+                    <i class="fas fa-user-tie fa-3x mb-2"></i>
+                    <h4>Receptionist Panel</h4>
+                    <p class="mb-0">Patient Registration</p>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-light">Welcome back,</small>
+                    <h6 class="mb-0">{{ current_user.get_full_name() }}</h6>
+                </div>
+
+                <nav class="nav flex-column">
+                    <a class="nav-link" href="{{ url_for('receptionist_dashboard') }}">
+                        <i class="fas fa-chart-bar me-2"></i>Dashboard
+                    </a>
+                    <a class="nav-link" href="{{ url_for('patients') }}">
+                        <i class="fas fa-users me-2"></i>All Patients
+                    </a>
+                    <a class="nav-link active" href="{{ url_for('add_patient') }}">
+                        <i class="fas fa-user-plus me-2"></i>Add Patient
+                    </a>
+                    <hr class="text-light">
+                    <a class="nav-link" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 p-4">
+                <div class="content-header">
+                    <h2><i class="fas fa-user-plus me-2"></i>Register New Patient</h2>
+                    <p class="text-muted">Add a new patient to the system</p>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="form-container">
+                    <form method="POST">
+                        <!-- Personal Information -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-user me-2"></i>Personal Information</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="first_name" class="form-label">First Name *</label>
+                                        <input type="text" class="form-control" id="first_name" name="first_name" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="last_name" class="form-label">Last Name *</label>
+                                        <input type="text" class="form-control" id="last_name" name="last_name" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="age" class="form-label">Age *</label>
+                                        <input type="number" class="form-control" id="age" name="age" min="1" max="120" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="gender" class="form-label">Gender *</label>
+                                        <select class="form-select" id="gender" name="gender" required>
+                                            <option value="">Select Gender</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="blood_type" class="form-label">Blood Type</label>
+                                        <select class="form-select" id="blood_type" name="blood_type">
+                                            <option value="">Select Blood Type</option>
+                                            <option value="A+">A+</option>
+                                            <option value="A-">A-</option>
+                                            <option value="B+">B+</option>
+                                            <option value="B-">B-</option>
+                                            <option value="AB+">AB+</option>
+                                            <option value="AB-">AB-</option>
+                                            <option value="O+">O+</option>
+                                            <option value="O-">O-</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-address-card me-2"></i>Contact Information</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="phone" class="form-label">Phone Number *</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email Address</label>
+                                        <input type="email" class="form-control" id="email" name="email">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Address</label>
+                                <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Emergency Contact -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-phone me-2"></i>Emergency Contact</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="emergency_contact" class="form-label">Emergency Contact Name</label>
+                                        <input type="text" class="form-control" id="emergency_contact" name="emergency_contact">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="emergency_phone" class="form-label">Emergency Contact Phone</label>
+                                        <input type="tel" class="form-control" id="emergency_phone" name="emergency_phone">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Medical Information -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-heartbeat me-2"></i>Medical Information</h5>
+                            <div class="mb-3">
+                                <label for="allergies" class="form-label">Allergies</label>
+                                <textarea class="form-control" id="allergies" name="allergies" rows="2" placeholder="List any known allergies"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="medical_history" class="form-label">Medical History</label>
+                                <textarea class="form-control" id="medical_history" name="medical_history" rows="3" placeholder="Previous medical conditions, surgeries, etc."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Doctor Assignment -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-user-md me-2"></i>Doctor Assignment</h5>
+                            <div class="mb-3">
+                                <label for="assigned_doctor" class="form-label">Assign to Doctor</label>
+                                <select class="form-select" id="assigned_doctor" name="assigned_doctor">
+                                    <option value="">Select Doctor (Optional)</option>
+                                    {% for doctor in doctors %}
+                                        <option value="{{ doctor.id }}">
+                                            {{ doctor.get_full_name() }} 
+                                            ({{ doctor.assigned_patients|length }} patients)
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">You can assign a doctor now or later</div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-plus me-2"></i>Register Patient
+                                </button>
+                                <a href="{{ url_for('patients') }}" class="btn btn-secondary btn-lg ms-2">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

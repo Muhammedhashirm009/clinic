@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient List - Patient Tracking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .nav-link {
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .content-header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .filter-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .table-responsive {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .patient-id {
+            font-family: monospace;
+            font-weight: bold;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 sidebar p-3">
+                <div class="text-center mb-4">
+                    <i class="fas fa-hospital-alt fa-3x mb-2"></i>
+                    <h4>Patient Tracking</h4>
+                    <p class="mb-0">
+                        {% if current_user.role == 'admin' %}Admin Panel{% endif %}
+                        {% if current_user.role == 'doctor' %}Doctor Panel{% endif %}
+                        {% if current_user.role == 'receptionist' %}Receptionist Panel{% endif %}
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-light">Welcome back,</small>
+                    <h6 class="mb-0">{{ current_user.get_full_name() }}</h6>
+                </div>
+
+                <nav class="nav flex-column">
+                    <a class="nav-link" href="{{ url_for('dashboard') }}">
+                        <i class="fas fa-chart-bar me-2"></i>Dashboard
+                    </a>
+                    <a class="nav-link active" href="{{ url_for('patients') }}">
+                        <i class="fas fa-users me-2"></i>
+                        {% if current_user.role == 'doctor' %}My Patients{% else %}All Patients{% endif %}
+                    </a>
+                    {% if current_user.role == 'receptionist' %}
+                        <a class="nav-link" href="{{ url_for('add_patient') }}">
+                            <i class="fas fa-user-plus me-2"></i>Add Patient
+                        </a>
+                    {% endif %}
+                    {% if current_user.role == 'admin' %}
+                        <a class="nav-link" href="{{ url_for('manage_users') }}">
+                            <i class="fas fa-user-cog me-2"></i>Manage Users
+                        </a>
+                    {% endif %}
+                    <hr class="text-light">
+                    <a class="nav-link" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 p-4">
+                <div class="content-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2><i class="fas fa-users me-2"></i>
+                                {% if current_user.role == 'doctor' %}My Patients{% else %}All Patients{% endif %}
+                            </h2>
+                            <p class="text-muted">Patient management and tracking</p>
+                        </div>
+                        {% if current_user.role == 'receptionist' %}
+                            <a href="{{ url_for('add_patient') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Add New Patient
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Search and Filter Section -->
+                <div class="filter-section">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" name="search" value="{{ search }}" placeholder="Name, ID, or Phone">
+                        </div>
+                        {% if current_user.role != 'doctor' %}
+                            <div class="col-md-4">
+                                <label for="doctor" class="form-label">Doctor</label>
+                                <select class="form-select" id="doctor" name="doctor">
+                                    <option value="">All Doctors</option>
+                                    {% for doctor in doctors %}
+                                        <option value="{{ doctor.id }}" {% if doctor_filter == doctor.id|string %}selected{% endif %}>
+                                            {{ doctor.get_full_name() }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        {% endif %}
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Statuses</option>
+                                <option value="Active" {% if status_filter == 'Active' %}selected{% endif %}>Active</option>
+                                <option value="Discharged" {% if status_filter == 'Discharged' %}selected{% endif %}>Discharged</option>
+                                <option value="Inactive" {% if status_filter == 'Inactive' %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>Search
+                            </button>
+                            <a href="{{ url_for('patients') }}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-times me-2"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Patient Table -->
+                <div class="table-responsive">
+                    {% if patients %}
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Patient ID</th>
+                                    <th>Name</th>
+                                    <th>Age</th>
+                                    <th>Gender</th>
+                                    <th>Phone</th>
+                                    {% if current_user.role != 'doctor' %}
+                                        <th>Assigned Doctor</th>
+                                    {% endif %}
+                                    <th>Status</th>
+                                    <th>Registration Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for patient in patients %}
+                                    <tr>
+                                        <td class="patient-id">{{ patient.patient_id }}</td>
+                                        <td>
+                                            <strong>{{ patient.get_full_name() }}</strong>
+                                        </td>
+                                        <td>{{ patient.age }}</td>
+                                        <td>{{ patient.gender }}</td>
+                                        <td>{{ patient.phone }}</td>
+                                        {% if current_user.role != 'doctor' %}
+                                            <td>
+                                                {% if patient.assigned_doctor %}
+                                                    <span class="badge bg-primary">
+                                                        {{ patient.assigned_doctor.get_full_name() }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-muted">Not assigned</span>
+                                                {% endif %}
+                                            </td>
+                                        {% endif %}
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if patient.status == 'Active' else 'secondary' if patient.status == 'Discharged' else 'warning' }}">
+                                                {{ patient.status }}
+                                            </span>
+                                        </td>
+                                        <td>{{ patient.registration_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if current_user.role in ['admin', 'receptionist'] or (current_user.role == 'doctor' and patient.assigned_doctor_id == current_user.id) %}
+                                                    <a href="{{ url_for('edit_patient', patient_id=patient.id) }}" class="btn btn-sm btn-outline-secondary">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                {% endif %}
+                                                {% if current_user.role == 'doctor' and patient.assigned_doctor_id == current_user.id %}
+                                                    <a href="{{ url_for('add_treatment', patient_id=patient.id) }}" class="btn btn-sm btn-outline-success">
+                                                        <i class="fas fa-plus"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users text-muted fa-4x mb-3"></i>
+                            <h5 class="text-muted">No patients found</h5>
+                            <p class="text-muted">
+                                {% if search or doctor_filter or status_filter %}
+                                    Try adjusting your search criteria
+                                {% else %}
+                                    No patients have been registered yet
+                                {% endif %}
+                            </p>
+                            {% if current_user.role == 'receptionist' %}
+                                <a href="{{ url_for('add_patient') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Add First Patient
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

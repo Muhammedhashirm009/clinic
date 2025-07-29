@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Treatment - Patient Tracking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .nav-link {
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .content-header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .form-section {
+            border-left: 4px solid #28a745;
+            padding-left: 20px;
+            margin-bottom: 30px;
+        }
+        .form-section h5 {
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        .patient-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .patient-id {
+            font-family: monospace;
+            font-weight: bold;
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 sidebar p-3">
+                <div class="text-center mb-4">
+                    <i class="fas fa-user-md fa-3x mb-2"></i>
+                    <h4>Doctor Panel</h4>
+                    <p class="mb-0">Patient Management</p>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-light">Welcome back,</small>
+                    <h6 class="mb-0">{{ current_user.get_full_name() }}</h6>
+                </div>
+
+                <nav class="nav flex-column">
+                    <a class="nav-link" href="{{ url_for('doctor_dashboard') }}">
+                        <i class="fas fa-chart-bar me-2"></i>Dashboard
+                    </a>
+                    <a class="nav-link" href="{{ url_for('patients') }}">
+                        <i class="fas fa-users me-2"></i>My Patients
+                    </a>
+                    <hr class="text-light">
+                    <a class="nav-link" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 p-4">
+                <div class="content-header">
+                    <h2><i class="fas fa-plus-circle me-2"></i>Add Treatment</h2>
+                    <p class="text-muted">Record new treatment for patient</p>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Patient Information -->
+                <div class="patient-info">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="patient-id">{{ patient.patient_id }}</h5>
+                            <p class="mb-1"><strong>{{ patient.get_full_name() }}</strong></p>
+                            <p class="text-muted mb-0">{{ patient.age }} years, {{ patient.gender }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Phone:</strong> {{ patient.phone }}</p>
+                            <p class="mb-1"><strong>Blood Type:</strong> {{ patient.blood_type or 'Not specified' }}</p>
+                            <p class="mb-0"><strong>Status:</strong> <span class="badge bg-success">{{ patient.status }}</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-container">
+                    <form method="POST">
+                        <!-- Visit Information -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-calendar-alt me-2"></i>Visit Information</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="visit_date" class="form-label">Visit Date & Time *</label>
+                                        <input type="datetime-local" class="form-control" id="visit_date" name="visit_date" 
+                                               value="{{ current_time }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="visit_type" class="form-label">Visit Type</label>
+                                        <select class="form-select" id="visit_type" name="visit_type">
+                                            <option value="Regular Checkup">Regular Checkup</option>
+                                            <option value="Follow-up">Follow-up</option>
+                                            <option value="Emergency">Emergency</option>
+                                            <option value="Consultation">Consultation</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vital Signs -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-heartbeat me-2"></i>Vital Signs</h5>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="temperature" class="form-label">Temperature (°F)</label>
+                                        <input type="number" class="form-control" id="temperature" name="temperature" 
+                                               step="0.1" min="95" max="110" placeholder="98.6">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="blood_pressure" class="form-label">Blood Pressure</label>
+                                        <input type="text" class="form-control" id="blood_pressure" name="blood_pressure" 
+                                               placeholder="120/80">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="heart_rate" class="form-label">Heart Rate (BPM)</label>
+                                        <input type="number" class="form-control" id="heart_rate" name="heart_rate" 
+                                               min="40" max="200" placeholder="72">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="weight" class="form-label">Weight (lbs)</label>
+                                        <input type="number" class="form-control" id="weight" name="weight" 
+                                               step="0.1" min="50" max="500" placeholder="150">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Clinical Information -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-stethoscope me-2"></i>Clinical Information</h5>
+                            <div class="mb-3">
+                                <label for="symptoms" class="form-label">Symptoms *</label>
+                                <textarea class="form-control" id="symptoms" name="symptoms" rows="3" 
+                                          placeholder="Describe patient's symptoms and chief complaint" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="diagnosis" class="form-label">Diagnosis *</label>
+                                <textarea class="form-control" id="diagnosis" name="diagnosis" rows="3" 
+                                          placeholder="Medical diagnosis and assessment" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="prescription" class="form-label">Prescription/Treatment Plan *</label>
+                                <textarea class="form-control" id="prescription" name="prescription" rows="4" 
+                                          placeholder="Medications, dosage, and treatment instructions" required></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-notes-medical me-2"></i>Additional Information</h5>
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Doctor's Notes</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                          placeholder="Additional observations or notes"></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="follow_up_date" class="form-label">Follow-up Date</label>
+                                        <input type="date" class="form-control" id="follow_up_date" name="follow_up_date">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="status" class="form-label">Treatment Status</label>
+                                        <select class="form-select" id="status" name="status">
+                                            <option value="Completed">Completed</option>
+                                            <option value="In Progress">In Progress</option>
+                                            <option value="Follow-up Required">Follow-up Required</option>
+                                            <option value="Referred">Referred</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-save me-2"></i>Save Treatment
+                                </button>
+                                <a href="{{ url_for('patients') }}" class="btn btn-secondary btn-lg ms-2">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                                <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-outline-primary btn-lg ms-2">
+                                    <i class="fas fa-eye me-2"></i>View Patient
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

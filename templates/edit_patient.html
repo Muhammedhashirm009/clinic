@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Patient - Patient Tracking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            background: linear-gradient(135deg, 
+                {% if current_user.role == 'admin' %}#667eea 0%, #764ba2 100%{% endif %}
+                {% if current_user.role == 'doctor' %}#28a745 0%, #20c997 100%{% endif %}
+                {% if current_user.role == 'receptionist' %}#fd7e14 0%, #e0a800 100%{% endif %}
+            );
+            min-height: 100vh;
+            color: white;
+        }
+        .nav-link {
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .content-header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .form-section {
+            border-left: 4px solid #667eea;
+            padding-left: 20px;
+            margin-bottom: 30px;
+        }
+        .form-section h5 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .patient-id {
+            font-family: monospace;
+            font-weight: bold;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 sidebar p-3">
+                <div class="text-center mb-4">
+                    <i class="fas fa-{% if current_user.role == 'admin' %}hospital-alt{% elif current_user.role == 'doctor' %}user-md{% else %}user-tie{% endif %} fa-3x mb-2"></i>
+                    <h4>
+                        {% if current_user.role == 'admin' %}Admin Panel{% endif %}
+                        {% if current_user.role == 'doctor' %}Doctor Panel{% endif %}
+                        {% if current_user.role == 'receptionist' %}Receptionist Panel{% endif %}
+                    </h4>
+                    <p class="mb-0">Edit Patient</p>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-light">Welcome back,</small>
+                    <h6 class="mb-0">{{ current_user.get_full_name() }}</h6>
+                </div>
+
+                <nav class="nav flex-column">
+                    <a class="nav-link" href="{{ url_for('dashboard') }}">
+                        <i class="fas fa-chart-bar me-2"></i>Dashboard
+                    </a>
+                    <a class="nav-link" href="{{ url_for('patients') }}">
+                        <i class="fas fa-users me-2"></i>
+                        {% if current_user.role == 'doctor' %}My Patients{% else %}All Patients{% endif %}
+                    </a>
+                    {% if current_user.role == 'receptionist' %}
+                        <a class="nav-link" href="{{ url_for('add_patient') }}">
+                            <i class="fas fa-user-plus me-2"></i>Add Patient
+                        </a>
+                    {% endif %}
+                    {% if current_user.role == 'admin' %}
+                        <a class="nav-link" href="{{ url_for('manage_users') }}">
+                            <i class="fas fa-user-cog me-2"></i>Manage Users
+                        </a>
+                    {% endif %}
+                    <hr class="text-light">
+                    <a class="nav-link" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 p-4">
+                <div class="content-header">
+                    <h2><i class="fas fa-user-edit me-2"></i>Edit Patient Information</h2>
+                    <p class="text-muted">Update patient details and medical information</p>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="form-container">
+                    <div class="mb-3">
+                        <h4 class="patient-id">{{ patient.patient_id }}</h4>
+                        <p class="text-muted">Patient ID: {{ patient.patient_id }}</p>
+                    </div>
+                    
+                    <form method="POST">
+                        <!-- Personal Information -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-user me-2"></i>Personal Information</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="first_name" class="form-label">First Name *</label>
+                                        <input type="text" class="form-control" id="first_name" name="first_name" 
+                                               value="{{ patient.first_name }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="last_name" class="form-label">Last Name *</label>
+                                        <input type="text" class="form-control" id="last_name" name="last_name" 
+                                               value="{{ patient.last_name }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="age" class="form-label">Age *</label>
+                                        <input type="number" class="form-control" id="age" name="age" 
+                                               value="{{ patient.age }}" min="1" max="120" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="gender" class="form-label">Gender *</label>
+                                        <select class="form-select" id="gender" name="gender" required>
+                                            <option value="Male" {% if patient.gender == 'Male' %}selected{% endif %}>Male</option>
+                                            <option value="Female" {% if patient.gender == 'Female' %}selected{% endif %}>Female</option>
+                                            <option value="Other" {% if patient.gender == 'Other' %}selected{% endif %}>Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="blood_type" class="form-label">Blood Type</label>
+                                        <select class="form-select" id="blood_type" name="blood_type">
+                                            <option value="">Select Blood Type</option>
+                                            <option value="A+" {% if patient.blood_type == 'A+' %}selected{% endif %}>A+</option>
+                                            <option value="A-" {% if patient.blood_type == 'A-' %}selected{% endif %}>A-</option>
+                                            <option value="B+" {% if patient.blood_type == 'B+' %}selected{% endif %}>B+</option>
+                                            <option value="B-" {% if patient.blood_type == 'B-' %}selected{% endif %}>B-</option>
+                                            <option value="AB+" {% if patient.blood_type == 'AB+' %}selected{% endif %}>AB+</option>
+                                            <option value="AB-" {% if patient.blood_type == 'AB-' %}selected{% endif %}>AB-</option>
+                                            <option value="O+" {% if patient.blood_type == 'O+' %}selected{% endif %}>O+</option>
+                                            <option value="O-" {% if patient.blood_type == 'O-' %}selected{% endif %}>O-</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-address-card me-2"></i>Contact Information</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="phone" class="form-label">Phone Number *</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone" 
+                                               value="{{ patient.phone }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email Address</label>
+                                        <input type="email" class="form-control" id="email" name="email" 
+                                               value="{{ patient.email or '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Address</label>
+                                <textarea class="form-control" id="address" name="address" rows="3">{{ patient.address or '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Emergency Contact -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-phone me-2"></i>Emergency Contact</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="emergency_contact" class="form-label">Emergency Contact Name</label>
+                                        <input type="text" class="form-control" id="emergency_contact" name="emergency_contact" 
+                                               value="{{ patient.emergency_contact or '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="emergency_phone" class="form-label">Emergency Contact Phone</label>
+                                        <input type="tel" class="form-control" id="emergency_phone" name="emergency_phone" 
+                                               value="{{ patient.emergency_phone or '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Medical Information -->
+                        <div class="form-section">
+                            <h5><i class="fas fa-heartbeat me-2"></i>Medical Information</h5>
+                            <div class="mb-3">
+                                <label for="allergies" class="form-label">Allergies</label>
+                                <textarea class="form-control" id="allergies" name="allergies" rows="2" 
+                                          placeholder="List any known allergies">{{ patient.allergies or '' }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="medical_history" class="form-label">Medical History</label>
+                                <textarea class="form-control" id="medical_history" name="medical_history" rows="3" 
+                                          placeholder="Previous medical conditions, surgeries, etc.">{{ patient.medical_history or '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Administrative Information -->
+                        {% if current_user.role in ['admin', 'receptionist'] %}
+                            <div class="form-section">
+                                <h5><i class="fas fa-user-md me-2"></i>Administrative</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="assigned_doctor" class="form-label">Assigned Doctor</label>
+                                            <select class="form-select" id="assigned_doctor" name="assigned_doctor">
+                                                <option value="">Select Doctor</option>
+                                                {% for doctor in doctors %}
+                                                    <option value="{{ doctor.id }}" 
+                                                            {% if patient.assigned_doctor_id == doctor.id %}selected{% endif %}>
+                                                        {{ doctor.get_full_name() }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="status" class="form-label">Status</label>
+                                            <select class="form-select" id="status" name="status">
+                                                <option value="Active" {% if patient.status == 'Active' %}selected{% endif %}>Active</option>
+                                                <option value="Discharged" {% if patient.status == 'Discharged' %}selected{% endif %}>Discharged</option>
+                                                <option value="Inactive" {% if patient.status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Submit Buttons -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save me-2"></i>Update Patient
+                                </button>
+                                <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-secondary btn-lg ms-2">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                                <a href="{{ url_for('patients') }}" class="btn btn-outline-secondary btn-lg ms-2">
+                                    <i class="fas fa-arrow-left me-2"></i>Back to Patients
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

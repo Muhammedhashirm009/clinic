@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Automation - Login</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="mb-0">
+                            <i class="fas fa-robot me-2"></i>
+                            Browser Automation
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- Flash messages -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <p class="text-muted mb-4">
+                            Enter your credentials to automatically login to a website and display the content.
+                        </p>
+
+                        <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+                            <div class="mb-3">
+                                <label for="website_url" class="form-label">
+                                    <i class="fas fa-link me-2"></i>Website URL
+                                </label>
+                                <input type="url" class="form-control" id="website_url" name="website_url" 
+                                       placeholder="https://example.com/login" required>
+                                <div class="form-text">Enter the complete URL of the website you want to login to</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="username" class="form-label">
+                                            <i class="fas fa-user me-2"></i>Username/Email
+                                        </label>
+                                        <input type="text" class="form-control" id="username" name="username" 
+                                               placeholder="Enter username or email">
+                                        <div class="form-text">Leave empty to use environment variable</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="password" class="form-label">
+                                            <i class="fas fa-lock me-2"></i>Password
+                                        </label>
+                                        <input type="password" class="form-control" id="password" name="password" 
+                                               placeholder="Enter password">
+                                        <div class="form-text">Leave empty to use environment variable</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Advanced Options -->
+                            <div class="card mt-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <button class="btn btn-link p-0 text-decoration-none" type="button" 
+                                                data-bs-toggle="collapse" data-bs-target="#advancedOptions">
+                                            <i class="fas fa-cog me-2"></i>Advanced Options
+                                        </button>
+                                    </h6>
+                                </div>
+                                <div class="collapse" id="advancedOptions">
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="user_agent" class="form-label">
+                                                <i class="fas fa-user-secret me-2"></i>User Agent
+                                            </label>
+                                            <input type="text" class="form-control" id="user_agent" name="user_agent" 
+                                                   placeholder="Custom user agent (optional)">
+                                            <div class="form-text">Override default user agent to avoid detection</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="proxy" class="form-label">
+                                                <i class="fas fa-shield-alt me-2"></i>Proxy
+                                            </label>
+                                            <input type="text" class="form-control" id="proxy" name="proxy" 
+                                                   placeholder="http://proxy:port (optional)">
+                                            <div class="form-text">Use proxy for additional anonymity</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg" id="loginBtn">
+                                    <i class="fas fa-sign-in-alt me-2"></i>
+                                    <span id="loginBtnText">Login & Capture</span>
+                                    <div class="spinner-border spinner-border-sm ms-2 d-none" id="loginSpinner"></div>
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="mt-4 pt-3 border-top">
+                            <h6>Environment Variables</h6>
+                            <p class="text-muted small">
+                                You can also set these environment variables in your .env file:
+                            </p>
+                            <ul class="list-unstyled text-muted small">
+                                <li><code>LOGIN_USERNAME</code> - Default username</li>
+                                <li><code>LOGIN_PASSWORD</code> - Default password</li>
+                                <li><code>USER_AGENT</code> - Default user agent</li>
+                                <li><code>PROXY</code> - Default proxy server</li>
+                                <li><code>SESSION_SECRET</code> - Session encryption key</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
