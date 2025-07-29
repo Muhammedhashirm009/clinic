@@ -27,7 +27,15 @@ class FirebaseConfig:
                 
             # Initialize Firebase Admin SDK
             if not firebase_admin._apps:
-                cred = credentials.Certificate(firebase_config.get('service_account'))
+                # Initialize Firebase Admin SDK
+cred_data = firebase_config.get('service_account')
+if isinstance(cred_data, dict):
+    cred = credentials.Certificate(cred_data)
+else:
+    cred = credentials.Certificate(cred_data)  # path to JSON
+
+self.firebase_app = firebase_admin.initialize_app(cred)
+
                 self.firebase_app = firebase_admin.initialize_app(cred)
             else:
                 self.firebase_app = firebase_admin.get_app()
